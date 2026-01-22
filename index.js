@@ -1,4 +1,5 @@
 import * as Lark from '@larksuiteoapi/node-sdk';
+import AIHandler from './ai-handler.js';
 
 /**
  * 配置应用基础信息和请求域名。
@@ -19,6 +20,7 @@ const baseConfig = {
  */
 const client = new Lark.Client(baseConfig);
 const wsClient = new Lark.WSClient(baseConfig);
+const aiHandler = new AIHandler(client);
 
 /**
  * 注册事件处理器。
@@ -35,22 +37,20 @@ const eventDispatcher = new Lark.EventDispatcher({}).register({
       message: { chat_id, content, message_type, chat_type },
     } = data;
 
-    /**
-     * 解析用户发送的消息。
-     * Parse the message sent by the user.
-     */
-
     let responseText = '';
 
     try {
       if (message_type === 'text') {
-        responseText = JSON.parse(content).text;
+        const userMessage = JSON.parse(content).text;
+        
+        // 使用 AI 处理用户消息
+        responseText = await aiHandler.processMessage(userMessage, chat_id);
       } else {
-        responseText = '解析消息失败，请发送文本消息 \nparse message failed, please send text message';
+        responseText = '请发送文本消息 \nPlease send text message';
       }
     } catch (error) {
-      // 解析消息失败，返回错误信息。 Parse message failed, return error message.
-      responseText = '解析消息失败，请发送文本消息 \nparse message failed, please send text message';
+      console.error('处理消息失败:', error);
+      responseText = '处理消息失败，请稍后再试 \nMessage processing failed, please try again later';
     }
 
     if (chat_type === 'p2p') {
@@ -63,9 +63,9 @@ const eventDispatcher = new Lark.EventDispatcher({}).register({
           receive_id_type: 'chat_id', // 消息接收者的 ID 类型，设置为会话ID。 ID type of the message receiver, set to chat ID.
         },
         data: {
-          receive_id: chat_id, // 消息接收者的 ID 为消息发送的会话ID。 ID of the message receiver is the chat ID of the message sending.
-          content: JSON.stringify({ text: `收到你发送的消息:${responseText}\nReceived message: ${responseText}` }),
-          msg_type: 'text', // 设置消息类型为文本消息。 Set message type to text message.
+          receive_id: chat_id,
+          content: JSON.stringify({ text: responseText }),
+          msg_type: 'text',
         },
       });
     } else {
@@ -78,8 +78,8 @@ const eventDispatcher = new Lark.EventDispatcher({}).register({
           message_id: data.message.message_id, // 要回复的消息 ID。 Message ID to reply.
         },
         data: {
-          content: JSON.stringify({ text: `收到你发送的消息:${responseText}\nReceived message: ${responseText}` }),
-          msg_type: 'text', // 设置消息类型为文本消息。 Set message type to text message.
+          content: JSON.stringify({ text: responseText }),
+          msg_type: 'text',
         },
       });
     }

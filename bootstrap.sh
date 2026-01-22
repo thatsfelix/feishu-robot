@@ -14,5 +14,18 @@ echo "安装项目依赖... / Installing project dependencies..."
 npm i
 
 # 启动项目 / Start the project
-echo "启动项目... / Starting the project..."
+echo "启动飞书 AI 机器人... / Starting Feishu AI Bot..."
+
+# 检查必要的环境变量
+if [ -z "$APP_ID" ] || [ -z "$APP_SECRET" ]; then
+    echo "❌ 请设置 APP_ID 和 APP_SECRET 环境变量"
+    echo "❌ Please set APP_ID and APP_SECRET environment variables"
+    exit 1
+fi
+
+if [ -z "$DEEPSEEK_API_KEY" ]; then
+    echo "⚠️  未设置 DEEPSEEK_API_KEY，AI 功能将不可用"
+    echo "⚠️  DEEPSEEK_API_KEY not set, AI features will be disabled"
+fi
+
 npm run dev

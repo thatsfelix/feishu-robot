@@ -9,6 +9,8 @@
     "dev": "node index.js"
   },
   "dependencies": {
-    "@larksuiteoapi/node-sdk": "^1.40.0"
+    "@larksuiteoapi/node-sdk": "^1.40.0",
+    "axios": "^1.13.2",
+    "openai": "^6.16.0"
   }
 }
